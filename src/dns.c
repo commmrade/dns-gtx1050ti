@@ -16,7 +16,7 @@ int send_dns_request(int sock, int qtype, const char* domain) {
     struct dns_header* dns_hdr = (struct dns_header*)buf_ptr;
     memset(dns_hdr, 0, sizeof(*dns_hdr));
     dns_hdr->id = htons(1337);
-   
+
     uint16_t flags = 0;
     flags |= RD_BIT;
     flags &= ~QR_FLAG;
@@ -85,9 +85,6 @@ int parse_dns_response(int sock) {
     //     return -1;
     // }
 
-    printf("Questions: %d, Ansers: %d\nRecords: %d, ARecords: %d\n",
-        ntohs(dns_hdr->qdcount), ntohs(dns_hdr->ancount), ntohs(dns_hdr->nscount), ntohs(dns_hdr->arcount));
-
     char* qname = buf_ptr;
     if ((*qname & 0xC0) == 0xC0) {
         fprintf(stderr, "DNS Compression is not supported yet\n");
@@ -150,7 +147,7 @@ int parse_dns_response(int sock) {
             }
         }
 
-        
+
         ++i;
     }
     return 0;
