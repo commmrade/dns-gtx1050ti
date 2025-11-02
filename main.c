@@ -15,8 +15,8 @@
 // https://www.geeksforgeeks.org/computer-networks/dns-message-format/
 
 int main(int argc, char** argv) {
-    if (argc < 3) {
-        fprintf(stdout, "Expected to get <dns-server-ip> <domain-name>\n");
+    if (argc < 4) {
+        fprintf(stdout, "Expected to get <[v4 || v6]> <dns-server-ip> <domain-name>\n");
         return 0;
     }
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(53);
-    int ret = inet_pton(AF_INET, argv[1], &addr.sin_addr); // Google dns
+    int ret = inet_pton(AF_INET, argv[2], &addr.sin_addr); // Google dns
     if (ret < 0) {
         perror("inet_pton failed");
         return -1;
@@ -43,7 +43,16 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    ret = send_dns_request(sock, IPV4_RECORD, argv[2]);
+    int qtype;
+    if (strcmp("v4", argv[1]) == 0) {
+        qtype = IPV4_RECORD;
+    } else if (strcmp("v6", argv[1]) == 0) {
+        qtype = IPV6_RECORD;
+    } else {
+        fprintf(stderr, "Unknown type\n");
+        return -1;
+    }
+    ret = send_dns_request(sock, qtype, argv[3]);
     if (ret < 0) {
         fprintf(stderr, "Send dns request failed\n");
         return -1;

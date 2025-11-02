@@ -16,8 +16,12 @@ int send_dns_request(int sock, int qtype, const char* domain) {
     struct dns_header* dns_hdr = (struct dns_header*)buf_ptr;
     memset(dns_hdr, 0, sizeof(*dns_hdr));
     dns_hdr->id = htons(1337);
-    dns_hdr->flags = htons(ntohs(dns_hdr->flags) & ~QR_FLAG);
-    dns_hdr->flags = htons(ntohs(dns_hdr->flags | RD_BIT));
+   
+    uint16_t flags = 0;
+    flags |= RD_BIT;
+    flags &= ~QR_FLAG;
+    dns_hdr->flags = htons(flags);
+
     dns_hdr->qdcount = htons(1);
     dns_hdr->ancount = htons(0);
     dns_hdr->nscount = htons(0);
@@ -65,8 +69,8 @@ int parse_dns_response(int sock) {
     buf_ptr += sizeof(*dns_hdr);
 
     uint16_t flags = ntohs(dns_hdr->flags);
-    bool is_recursion_available = (flags & RA_BIT);
-    bool is_aa = (flags & AA_BIT);
+    bool is_recursion_available = (flags & RA_BIT) == RA_BIT;
+    bool is_aa = (flags & AA_BIT) == AA_BIT;
     int rcode = (flags & RCODE_MASK);
     if (!is_recursion_available) {
         fprintf(stderr, "Recursion is not available, failing..\n");
@@ -76,10 +80,10 @@ int parse_dns_response(int sock) {
         fprintf(stderr, "Server error: %d, failing..\n", rcode);
         return -1;
     }
-    if (!is_aa) {
-        fprintf(stderr, "Not authoritive answers are not supported\n");
-        return -1;
-    }
+    // if (!is_aa) {
+    //     fprintf(stderr, "Not authoritive answers are not supported\n");
+    //     return -1;
+    // }
 
     printf("Questions: %d, Ansers: %d\nRecords: %d, ARecords: %d\n",
         ntohs(dns_hdr->qdcount), ntohs(dns_hdr->ancount), ntohs(dns_hdr->nscount), ntohs(dns_hdr->arcount));
@@ -117,7 +121,6 @@ int parse_dns_response(int sock) {
         uint32_t ttl = ntohl(dns_a->ttl);
         uint16_t rdlength = ntohs(dns_a->rdlength);
 
-        printf("Type: %d\n", type);
         switch (type) {
             case 1: { // IPv4
                 uint32_t ip = *(uint32_t*)buf_ptr;
