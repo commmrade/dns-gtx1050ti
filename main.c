@@ -192,7 +192,8 @@ int parse_dns_response(int sock) {
 int main() {
     // TODOS:
     // 1. Refactor send functions [DONE]; Refactor receive func {NOT DONE}
-    // 2. Figure out records
+    // 2. Ability to parse several answers (LIKE getaddrinfo) {NOT DONE}
+    // 3. Figure out records {NOT DONE}
 
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
